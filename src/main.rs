@@ -3,12 +3,13 @@ use mini_redis::{Connection, Frame};
 
 #[tokio::main]
 async fn main() {
+    //A TCP socket server listening to connections which are bound to the specified address
     let listener = TcpListener::bind("127.0.0.1:6379").await.unwrap();
  
-    //hadle incoming sockets in a loop
+    //handle incoming sockets in a loop
     loop {
         //the second item _ contains the IP and port of the new connection
-        let (socket, _) = listener.accept().await.unwrap();
+        let (socket, _ip_addr) = listener.accept().await.unwrap();
         process(socket).await;
     }
 
