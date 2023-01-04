@@ -45,13 +45,11 @@ async fn process(socket: TcpStream, datastore: Datastore) {
     while let Some(frame) = connection.read_frame().await.unwrap(){
         let response = match Command::from_frame(frame).unwrap(){
             Set(cmd) => {
-                //lock the hashmap before using it
                 let mut datastore = datastore.lock().unwrap();
                 datastore.insert(cmd.key().to_string(), cmd.value().clone());
                 Frame::Simple("OK".to_string())
             }
             Get(cmd) => {
-                //lock the hashmap before using it
                 let datastore = datastore.lock().unwrap();
                 if let Some(data) = datastore.get(cmd.key())  {
                     Frame::Bulk(data.clone().into())
