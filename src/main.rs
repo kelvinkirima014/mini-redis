@@ -30,6 +30,8 @@ async fn main() {
         tokio::spawn(async move {
             process(socket, datastore).await;
         });
+
+        println!("Connection processed");
        
     }
 
@@ -61,13 +63,5 @@ async fn process(socket: TcpStream, datastore: Datastore) {
 
         connection.write_frame(&response).await.unwrap();
     }
-
-    // if let Some(frame) = connection.read_frame().await.unwrap(){
-    //     println!("Got: {:?}", frame);
-
-    //     //respond with an error
-    //     let response = Frame::Error("Unimplemented".to_string());
-    //     connection.write_frame(&response).await.unwrap();
-    // }
 
 }
