@@ -18,7 +18,8 @@ async fn main() {
 
     let (sender, mut receiver) = mpsc::channel(32);
 
-    let scheduler = tokio::spawn(async move {
+    //spawn a task that processes messages from the channel
+    let processor = tokio::spawn(async move {
         let mut client = client::connect("127..0.0.1:6379").await.unwrap();
 
         while let Some(cmd) = receiver.recv().await{
@@ -34,9 +35,11 @@ async fn main() {
         }
 
     });
-
+    
+    //clone sender channel
     let sender1 = sender.clone();
 
+    //task to get commands over a channel
     let get_command = tokio::spawn(async move {
         let cmd = Commands::Get { 
             key: "foo".to_string(),
@@ -44,6 +47,8 @@ async fn main() {
          sender.send(cmd).await.unwrap();
     });
 
+   
+    //task to set commands over a channel
     let set_command = tokio::spawn(async move {
         let cmd = Commands::Set { 
             key: "foo".to_string(), 
@@ -54,6 +59,6 @@ async fn main() {
 
     get_command.await.unwrap();
     set_command.await.unwrap();
-    scheduler.await.unwrap();
+    processor.await.unwrap();
 
 }
