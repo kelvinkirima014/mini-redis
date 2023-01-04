@@ -2,6 +2,7 @@ use mini_redis::client;
 use tokio::sync::mpsc;
 use bytes::Bytes;
 
+#[derive(Debug)]
 enum Commands {
     Get {
         key: String,
@@ -24,28 +25,35 @@ async fn main() {
             use Commands::*;
             match  cmd  {
                 Get { key } => {
-                    client.get(&key).await;
+                    client.get(&key).await.unwrap();
                 },
                 Set { key, value } => {
-                    client.set(&key, value).await;
+                    client.set(&key, value).await.unwrap();
                 }
             }
         }
 
     });
 
-    // let mut client = client::connect("127.0.0.1:6379").await.unwrap();
+    let sender1 = sender.clone();
 
-    // let task1 = tokio::spawn(async {
-    //     let res = client.get("foo".into()).await;
-    // });
+    let get_command = tokio::spawn(async move {
+        let cmd = Commands::Get { 
+            key: "foo".to_string(),
+         };
+         sender.send(cmd).await.unwrap();
+    });
 
-    // let task2 = tokio::spawn(async {
-    //     client.set("foo".into(), "bar".into()).await;
-    // });
+    let set_command = tokio::spawn(async move {
+        let cmd = Commands::Set { 
+            key: "foo".to_string(), 
+            value: "bar".into(),
+         };
+         sender1.send(cmd).await.unwrap();
+    });
 
-    // task1.await.unwrap();
-    // task2.await.unwrap();
-
+    get_command.await.unwrap();
+    set_command.await.unwrap();
+    scheduler.await.unwrap();
 
 }
