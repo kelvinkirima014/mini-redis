@@ -1,9 +1,9 @@
 //Start a server and use `tokio::spawn` to start a new task that processes each received connection.
-use tokio::net::{TcpListener, TcpStream};
-use mini_redis::{Connection, Frame};
 use bytes::Bytes;
+use mini_redis::{Connection, Frame};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
+use tokio::net::{TcpListener, TcpStream};
 
 type Datastore = Arc<Mutex<HashMap<String, Bytes>>>;
 
@@ -15,26 +15,23 @@ async fn main() {
     println!("Listening to connection...");
 
     let datastore = Arc::new(Mutex::new(HashMap::new()));
- 
+
     //handle incoming sockets in a loop
     loop {
         //the second item _ip_addr contains the IP address of the new connection
         let (socket, _ip_addr) = listener.accept().await.unwrap();
-        
-        let datastore = datastore.clone();
 
+        let datastore = datastore.clone();
 
         println!("Connection accepted");
         //spawn a task for each process
-       
+
         tokio::spawn(async move {
             process(socket, datastore).await;
         });
 
         println!("Connection processed");
-       
     }
-
 }
 
 async fn process(socket: TcpStream, datastore: Datastore) {
@@ -42,8 +39,8 @@ async fn process(socket: TcpStream, datastore: Datastore) {
     //connection, provided by `mini_redis` enables parsing frames from the socket
     let mut connection = Connection::new(socket);
 
-    while let Some(frame) = connection.read_frame().await.unwrap(){
-        let response = match Command::from_frame(frame).unwrap(){
+    while let Some(frame) = connection.read_frame().await.unwrap() {
+        let response = match Command::from_frame(frame).unwrap() {
             Set(cmd) => {
                 let mut datastore = datastore.lock().unwrap();
                 datastore.insert(cmd.key().to_string(), cmd.value().clone());
@@ -51,17 +48,15 @@ async fn process(socket: TcpStream, datastore: Datastore) {
             }
             Get(cmd) => {
                 let datastore = datastore.lock().unwrap();
-                if let Some(data) = datastore.get(cmd.key())  {
+                if let Some(data) = datastore.get(cmd.key()) {
                     Frame::Bulk(data.clone().into())
                 } else {
                     Frame::Null
                 }
-            } 
+            }
             cmd => panic!("Unimplemented {:?}", cmd),
-            
         };
 
         connection.write_frame(&response).await.unwrap();
     }
-
 }
