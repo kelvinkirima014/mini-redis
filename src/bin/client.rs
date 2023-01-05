@@ -20,7 +20,7 @@ async fn main() {
 
     //spawn a task that processes messages from the channel
     let task_message_processor = tokio::spawn(async move {
-        let mut client = client::connect("127..0.0.1:6379").await.unwrap();
+        let mut client = client::connect("127.0.0.1:6379").await.unwrap();
 
         while let Some(cmd) = receiver.recv().await{
             use Commands::*;
