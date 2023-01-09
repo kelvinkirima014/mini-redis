@@ -33,7 +33,7 @@ async fn main() {
     });
 
     //clone sender channel
-    
+
     //task to get commands over a channel
     let task_get_command = tokio::spawn(async move {
         let cmd = Commands::Get {
