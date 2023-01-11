@@ -10,6 +10,7 @@ enum Commands {
 
 #[tokio::main]
 async fn main() {
+    //transmitter -> tx, receiver -> rx 
     let (tx, mut rx) = mpsc::channel(32);
 
     //clone the sender channel so we can have multiple senders
